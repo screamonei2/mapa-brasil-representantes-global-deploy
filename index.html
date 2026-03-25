@@ -213,8 +213,21 @@
             <div class="grid-container">
                 <!-- Coluna do Mapa -->
                 <div class="map-container">
-                    <div class="map-wrapper">
-                        <div id="map"></div>
+                    <div class="map-wrapper relative overflow-hidden">
+                    <div id="map"></div>
+                    
+                    <!-- ── FLOATING CARDS PANEL ────────────────────────── -->
+                    <div id="floating-panel" class="absolute top-4 right-4 w-72 sm:w-80 max-h-[calc(100%-2rem)] overflow-y-auto hidden z-[1000] flex-col p-1 pointer-events-none custom-scrollbar">
+                        <div class="bg-white/95 backdrop-blur-md rounded-xl shadow-lg shadow-black/10 p-3 mb-3 flex justify-between items-center border border-gray-200 pointer-events-auto">
+                            <h2 id="panel-title" class="font-bold text-blue-900 text-lg ml-1">País</h2>
+                            <button id="close-panel-btn" class="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <div id="panel-content" class="flex flex-col gap-3 pointer-events-auto">
+                            <!-- Cards flutuantes injetados aqui -->
+                        </div>
+                    </div>
                         <button id="reset-zoom-btn" class="reset-zoom-btn" title="Resetar zoom">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor">
@@ -238,9 +251,254 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async function () {
+            // Inicializar ícones imediatamente
+            lucide.createIcons();
 
             // ── CONFIG ──────────────────────────────────────────────
             const GEOJSON_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson';
+
+            // ── DADOS GLOBAIS ───────────────────────────────────────
+            const fallbackLATAM = [{
+                NomeRepresentante: "SCHIOPPA RUEDAS INDUSTRIALES",
+                Contato: "Equipe LATAM",
+                Telefones: ["+55 11 2065-5200"],
+                email: "latam.sales@schioppa.com.br"
+            }];
+
+            const fallbackGlobal = [{
+                NomeRepresentante: "SCHIOPPA CASTERS & WHEELS",
+                Contato: "Global Sales",
+                Telefones: ["+55 11 2065-5200"],
+                email: "global.sales@schioppa.com.br"
+            }];
+
+            const representantesGlobais = {
+                "Argentina": [
+                    {
+                        NomeRepresentante: "RUEDAS HOFER SRL",
+                        Tipo: "Distribuidor",
+                        Contato: "Jorge Picovsky",
+                        Endereco: "Av. Rivadavia 15262 Haedo (1706) Pcia. de Bs. As. – Argentina",
+                        Telefones: ["(54 11) 4443-1439/6412"],
+                        email: "info@ruedashofer.com.ar",
+                        Site: "www.ruedashofer.com.ar"
+                    }
+                ],
+                "Bolivia": [
+                    {
+                        NomeRepresentante: "IMPORTADORA J.M.",
+                        Tipo: "Distribuidor",
+                        Contato: "Jorge Miranda",
+                        Endereco: "Barrio Militar Pasaje Tacna nr. 65 Santa Cruz de la Sierra – Bolívia",
+                        Telefones: ["(591) 3354-2413"],
+                        email: "jmillonario505@hotmail.com"
+                    }
+                ],
+                "Chile": [
+                    {
+                        NomeRepresentante: "DUCASSE COMERCIAL LTDA.",
+                        Tipo: "Distribuidor",
+                        Endereco: "Av. Lib. Bdo. O'Higgins, 1472 Santiago – Chile",
+                        Telefones: ["(562) 355-7050"],
+                        email: "info@dapducasse.cl",
+                        Site: "www.dapducasse.cl"
+                    }
+                ],
+                "Colombia": [
+                    {
+                        NomeRepresentante: "Representante Oficial",
+                        Tipo: "Representante",
+                        Contato: "Gonzalo de Jesús Rendón Arias",
+                        Endereco: "Rionegro - Antioquia - Colombia",
+                        Telefones: ["+574 310 4283044"],
+                        email: "schioppacol@gmail.com"
+                    },
+                    {
+                        NomeRepresentante: "COMERCIALIZADORA GENERAL POSADA HERMANOS S.A.S",
+                        Tipo: "Distribuidor",
+                        Telefones: ["604 448-6769"],
+                        email: "davidcastro@comercializadorageneral.com"
+                    },
+                    {
+                        NomeRepresentante: "IMPOMUNDO S.A.S",
+                        Tipo: "Distribuidor",
+                        Contato: "Jonathan Martinez",
+                        Telefones: ["601 878-6726", "57-3102542154"],
+                        email: "impomundogerencia@gmail.com"
+                    }
+                ],
+                "Ecuador": [
+                    {
+                        NomeRepresentante: "VENTAS DE FERRETERIA Y SERVICIOS ASOCIADOS VEFERSA CIA. LTDA",
+                        Contato: "Roberto Palacios",
+                        Endereco: "Eloy Alfaro 2009 y Venezuela Guayaquil – Ecuador",
+                        Telefones: ["(593) 4 2445680", "(593) 4 2445038", "(593) 4 2443267"],
+                        email: "rpalacios@vefersa.com"
+                    }
+                ],
+                "Paraguay": [
+                    {
+                        NomeRepresentante: "IMPORTADORA PARANÁ S.A. (1)",
+                        Tipo: "Representante e Distribuidor",
+                        Contato: "Ivonete de Souza",
+                        Endereco: "Km.3 ½ Calle Cnrl.José Sánchez N° 263 Ciudad Del Este – Paraguay",
+                        Telefones: ["(595) (61) 570-370"],
+                        Site: "http://www.iparana.com.py",
+                        email: "i-parana@iparana.com.py"
+                    },
+                    {
+                        NomeRepresentante: "IMPORTADORA PARANÁ S.A. (2)",
+                        Endereco: "Avda.Eusebio Ayala c/Boggiani 4898 Asunción – Paraguay",
+                        Telefones: ["(595) (21) 608-664"],
+                        Site: "http://iparana.com.py",
+                        email: "i-parana@iparana.com.py"
+                    }
+                ],
+                "Peru": [
+                    {
+                        NomeRepresentante: "AUTOPARTES Y MAS DELPAN SAC",
+                        Contato: "Antonio Delgado M. – Gerente General",
+                        Endereco: "Calle 33 Mz. “P” Lt. 14 Los Jazmines del Naranjal – Los Olivos – Lima",
+                        Telefones: ["(511) 485-8542", "(511) 996-493-354", "RPM # 542754"],
+                        email: "automasdelpansac@gmail.com"
+                    }
+                ],
+                "Uruguay": [
+                    {
+                        NomeRepresentante: "ESSEN LTDA",
+                        Tipo: "Representante e Distribuidor",
+                        Contato: "Julio Rodriguez",
+                        Endereco: "Galicia, 1382 C.P.11200 Montevideo – Uruguay",
+                        Telefones: ["(598) 2 901-0305", "(598) 2 902-2595"],
+                        email: "essen@adinet.com.uy",
+                        Site: "www.essenltda.com.uy"
+                    }
+                ],
+                "Costa Rica": [
+                    {
+                        NomeRepresentante: "REPRESENTACIONES OBAMA SOCIEDAD ANONIMA",
+                        Tipo: "Distribuidor Exclusivo",
+                        Contato: "Genier Rolando Obando",
+                        Endereco: "Santa Rosa de extralum 75 metros Este y 250 metros Sur Heredia, Santo Domingo, 40301 – Costa Rica",
+                        Telefones: ["+506 4105 1794"],
+                        email: "g.rolando@obamacr.com"
+                    }
+                ],
+                "Mexico": [
+                    {
+                        NomeRepresentante: "METALÚRGICA SCHIOPPA S.A. DE C.V. CEDIS",
+                        Contato: "Héctor Pérez Domínguez",
+                        Endereco: "Microparque Pyme Q3 Bodega 80 - En Anillo Vial II No. 10271 Cumbres de Conín - En El Ejido La Cañada, hoy Villa del Marqués del Águila Municipio del Marqués - Querétaro - México CP. 76246",
+                        Telefones: ["+52 442 198 0718", "+52 222 862 6991"],
+                        email: "info@schioppa.com.mx",
+                        Site: "www.schioppa.com.mx"
+                    }
+                ],
+                "United States of America": [
+                    {
+                        NomeRepresentante: "DORODO LLC / SCHIOPPA NORTH AMERICA",
+                        Contato: "Mr. Gary King",
+                        Endereco: "1165 Electric Avenue Wayland, Michigan - USA - MI 49348",
+                        Telefones: ["(1) 866 362-3226"],
+                        email: "cs@dorodo.net"
+                    }
+                ],
+                "Canada": [
+                    {
+                        NomeRepresentante: "DORODO LLC / SCHIOPPA NORTH AMERICA",
+                        Contato: "Mr. Gary King",
+                        Endereco: "1165 Electric Avenue Wayland, Michigan - USA - MI 49348",
+                        Telefones: ["(1) 866 362-3226"],
+                        email: "cs@dorodo.net"
+                    }
+                ],
+                "Israel": [
+                    {
+                        NomeRepresentante: "GLHA THE INDUSTRIAL WHEEL 2002 LTD.",
+                        Contato: "Mr. Tair",
+                        Endereco: "St. Nahshon 12 Petah Tikva, 4900602, Israel",
+                        Telefones: ["+972-35707994", "+972-35797245"],
+                        email: "sales@galcha1.com",
+                        Site: "www.galcha1.com"
+                    }
+                ]
+            };
+
+            function getRepresentativesForCountry(feature) {
+                const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
+                const subregion = feature.properties.SUBREGION;
+                
+                if (representantesGlobais[nameEn]) {
+                    return representantesGlobais[nameEn];
+                }
+                
+                // LATAM Fallback (Regiões da América Latina que costumam cair no fallback se não estiverem explícitos)
+                const latamRegions = ["South America", "Central America", "Caribbean", "Middle America"];
+                return latamRegions.includes(subregion) ? fallbackLATAM : fallbackGlobal;
+            }
+
+            // ── UI LOGIC / PAINEL FLUTUANTE ───────────────────────────
+            const floatingPanel = document.getElementById('floating-panel');
+            const closePanelBtn = document.getElementById('close-panel-btn');
+            const panelTitle = document.getElementById('panel-title');
+            const panelContent = document.getElementById('panel-content');
+
+            function closeFloatingPanel() {
+                floatingPanel.classList.add('hidden');
+                floatingPanel.classList.remove('flex');
+            }
+
+            closePanelBtn.addEventListener('click', closeFloatingPanel);
+
+            function renderBrazilCTA() {
+                panelTitle.textContent = "Brasil";
+                panelContent.innerHTML = `
+                    <div class="result-item bg-white border border-gray-100 rounded-xl p-6 shadow-md transition-shadow">
+                        <div class="text-green-600 mb-4 flex justify-center"><i data-lucide="map" class="w-12 h-12"></i></div>
+                        <div class="font-bold text-gray-800 text-xl mb-3 text-center">Nossa Sede Central</div>
+                        <p class="text-sm text-gray-600 mb-6 text-center leading-relaxed">Acesse a nossa página principal para encontrar e pesquisar representantes e distribuidores locais exclusivos no Brasil.</p>
+                        <a href="../vercel-deploy/index.html" class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-sm">
+                            Acessar Mapa do Brasil
+                        </a>
+                    </div>
+                `;
+                if (window.lucide) window.lucide.createIcons();
+                floatingPanel.classList.remove('hidden');
+                floatingPanel.classList.add('flex');
+            }
+
+            function renderCards(countryName, reps) {
+                panelTitle.textContent = countryName;
+                
+                panelContent.innerHTML = reps.map((item, index) => {
+                    let telefonesHtml = '';
+                    if (item.Telefones && item.Telefones.length > 0) {
+                        telefonesHtml = `<div class="flex flex-wrap gap-1 items-center">
+                            ${item.Telefones.map(tel => `<a href="tel:${tel.replace(/[^0-9+]/g, '')}" class="text-blue-600 hover:underline inline-block font-medium">${tel}</a>`).join('<span class="text-gray-300 mx-1.5">•</span>')}
+                        </div>`;
+                    }
+
+                    return `
+                        <div class="result-item bg-white/95 backdrop-blur-sm border border-gray-100/50 rounded-xl p-4 shadow-md hover:shadow-lg transition-all relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                            <div class="font-bold text-blue-900 text-[1.05rem] mb-2.5 leading-tight">${item.NomeRepresentante}</div>
+                            <div class="space-y-2.5">
+                                ${item.Tipo ? `<div class="text-gray-700 text-sm flex items-center gap-2.5"><i data-lucide="tag" class="w-4 h-4 text-blue-500/70"></i> <span class="font-medium">${item.Tipo}</span></div>` : ''}
+                                ${item.Contato ? `<div class="text-gray-700 text-sm flex items-center gap-2.5"><i data-lucide="user" class="w-4 h-4 text-blue-500/70"></i> <span>${item.Contato}</span></div>` : ''}
+                                ${item.Endereco ? `<div class="text-gray-700 text-sm flex items-start gap-2.5"><i data-lucide="map-pin" class="w-4 h-4 text-blue-500/70 mt-0.5 shrink-0"></i> <span class="leading-snug">${item.Endereco}</span></div>` : ''}
+                                ${item.email ? `<div class="text-gray-700 text-sm flex items-center gap-2.5"><i data-lucide="mail" class="w-4 h-4 text-blue-500/70"></i> <a href="mailto:${item.email}" class="text-blue-600 hover:underline break-all">${item.email}</a></div>` : ''}
+                                ${item.Site ? `<div class="text-gray-700 text-sm flex items-center gap-2.5"><i data-lucide="globe" class="w-4 h-4 text-blue-500/70"></i> <a href="http://${item.Site.replace(/^https?:\/\//, '')}" target="_blank" class="text-blue-600 hover:underline break-all">${item.Site}</a></div>` : ''}
+                            </div>
+                            ${telefonesHtml ? `<div class="text-gray-700 text-sm mt-3 pt-3 border-t border-gray-100 flex items-start gap-2.5 bg-gray-50/50 -mx-4 px-4 -mb-4 pb-3"><i data-lucide="phone" class="w-4 h-4 text-blue-500/70 mt-0.5 shrink-0"></i> <div class="flex-1">${telefonesHtml}</div></div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                // Inicializa ícones recém-criados e abre o painel
+                if (window.lucide) window.lucide.createIcons();
+                floatingPanel.classList.remove('hidden');
+                floatingPanel.classList.add('flex');
+            }
 
             // ── MAP STYLES ──────────────────────────────────────────
             const defaultStyle = {
@@ -249,6 +507,14 @@
                 opacity: 1,
                 color: 'white',
                 fillOpacity: 0.7
+            };
+
+            const disabledStyle = {
+                fillColor: '#cbd5e1',
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                fillOpacity: 0.4
             };
 
             const highlightStyle = {
@@ -263,24 +529,19 @@
             };
 
             // ── STATE ───────────────────────────────────────────────
-            let geoJsonLayer = null;
+            let geoJsonLayer;
             let selectedLayer = null;
             const loadingOverlay = document.getElementById('loading-overlay');
 
             // ── INIT MAP ────────────────────────────────────────────
-            const southWest = L.latLng(-85, -180);
-            const northEast = L.latLng(85, 180);
-            const worldBounds = L.latLngBounds(southWest, northEast);
-
             const map = L.map('map', {
                 center: [20, 0],
                 zoom: 2,
                 minZoom: 2,
-                maxZoom: 8,
-                zoomControl: true,
-                attributionControl: true,
-                worldCopyJump: false,
-                maxBounds: worldBounds,
+                maxBounds: [
+                    [-90, -180],
+                    [90, 180]
+                ],
                 maxBoundsViscosity: 1.0
             });
 
@@ -289,64 +550,95 @@
 
             // ── HELPERS ─────────────────────────────────────────────
             const ptFallback = {
-                'W. Sahara': 'Saara Ocidental', 'Dem. Rep. Congo': 'Rep. Dem. do Congo',
-                'Dominican Rep.': 'República Dominicana', 'Falkland Is.': 'Ilhas Malvinas',
-                'Fr. S. Antarctic Lands': 'Terras Austrais Francesas',
-                'Bosnia and Herz.': 'Bósnia e Herzegovina', 'N. Cyprus': 'Chipre do Norte',
-                'Somaliland': 'Somalilândia', 'Kosovo': 'Kosovo', 'S. Sudan': 'Sudão do Sul',
-                'Central African Rep.': 'Rep. Centro-Africana', 'Eq. Guinea': 'Guiné Equatorial',
-                'eSwatini': 'Eswatini', 'Solomon Is.': 'Ilhas Salomão',
-                'N. Korea': 'Coreia do Norte', 'S. Korea': 'Coreia do Sul',
-                'United States of America': 'Estados Unidos'
+                "United States of America": "Estados Unidos",
+                "Russia": "Rússia",
+                "W. Sahara": "Saara Ocidental",
+                "Dem. Rep. Congo": "R.D. Congo",
+                "Central African Rep.": "Rep. Centro-Africana",
+                "S. Sudan": "Sudão do Sul",
+                "Dominican Rep.": "Rep. Dominicana",
+                "Falkland Is.": "Ilhas Falkland",
+                "Greenland": "Groenlândia",
+                "Eq. Guinea": "Guiné Equatorial",
+                "eSwatini": "Eswatini"
             };
 
-            function getDisplayName(properties) {
-                if (properties.NAME_PT) return properties.NAME_PT;
-                const name = properties.NAME || properties.name || properties.ADMIN || 'Desconhecido';
-                return ptFallback[name] || name;
+            function getCountryName(feature) {
+                const props = feature.properties;
+                const nameEn = props.NAME_EN || props.NAME;
+                // Usar NAME_PT se disponível e não vazio ou fallback manual
+                if (props.NAME_PT && props.NAME_PT.trim() !== '') {
+                    return props.NAME_PT;
+                }
+                return ptFallback[nameEn] || nameEn;
             }
 
             function onEachFeature(feature, layer) {
-                const name = getDisplayName(feature.properties);
-
-                layer.bindTooltip(name, {
+                const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
+                const countryName = getCountryName(feature);
+                
+                const hasSpecificData = !!representantesGlobais[nameEn] || nameEn === "Brazil";
+                
+                // Países disabled não podem ter cliques, hoverings, nem tooltips
+                if (!hasSpecificData) {
+                    layer.options.interactive = false; // Leaflet ignora todos os eventos de mouse
+                    return; 
+                }
+                
+                // Tooltip para países válidos
+                layer.bindTooltip(`
+                    <div class="font-semibold text-gray-800">${countryName}</div>
+                    <div class="text-xs text-gray-500 mt-1">Clique para maiores detalhes</div>
+                `, {
                     sticky: true,
-                    className: 'country-tooltip',
-                    direction: 'top',
-                    offset: [0, -10]
+                    className: 'custom-tooltip',
+                    direction: 'auto'
                 });
 
                 layer.on({
                     mouseover: function (e) {
-                        const l = e.target;
-                        if (l !== selectedLayer) {
-                            l.setStyle(highlightStyle);
-                            l.bringToFront();
-                            if (selectedLayer) selectedLayer.bringToFront();
+                        const layer = e.target;
+                        layer.setStyle(highlightStyle);
+                        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                            layer.bringToFront();
                         }
                     },
                     mouseout: function (e) {
-                        const l = e.target;
-                        if (l !== selectedLayer) {
-                            geoJsonLayer.resetStyle(l);
+                        const layer = e.target;
+                        if (layer !== selectedLayer) {
+                            geoJsonLayer.resetStyle(layer); // Leaflet automaticamente aplica o return da style fn
+                        } else {
+                            layer.setStyle(selectedStyle);
                         }
                     },
                     click: function (e) {
-                        const l = e.target;
+                        try { map.closeTooltip(); } catch(err) {} 
 
-                        if (selectedLayer && selectedLayer !== l) {
+                        if (selectedLayer) {
                             geoJsonLayer.resetStyle(selectedLayer);
                         }
+                        selectedLayer = e.target;
+                        selectedLayer.setStyle(selectedStyle);
+                        
+                        if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                            selectedLayer.bringToFront();
+                        }
 
-                        if (selectedLayer === l) {
-                            geoJsonLayer.resetStyle(l);
-                            selectedLayer = null;
-                            map.setView([20, 0], 2);
+                        // Calcular os limites com um pouco de padding para a direita pra acomodar os cards flutuantes
+                        map.fitBounds(e.target.getBounds(), {
+                            paddingBottomRight: [340, 0], // Move center left to fit right-side cards
+                            maxZoom: 5,
+                            animate: true
+                        });
+
+                        const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
+                        const countryName = getCountryName(feature);
+                        
+                        if (nameEn === "Brazil") {
+                            renderBrazilCTA();
                         } else {
-                            selectedLayer = l;
-                            l.setStyle(selectedStyle);
-                            l.bringToFront();
-                            map.fitBounds(l.getBounds(), { padding: [40, 40], maxZoom: 6 });
+                            const reps = getRepresentativesForCountry(feature);
+                            renderCards(countryName, reps);
                         }
                     }
                 });
@@ -365,8 +657,10 @@
                 });
 
                 geoJsonLayer = L.geoJson(geoData, {
-                    style: function () {
-                        return { ...defaultStyle };
+                    style: function (feature) {
+                        const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
+                        const hasSpecificData = !!representantesGlobais[nameEn] || nameEn === "Brazil";
+                        return hasSpecificData ? defaultStyle : disabledStyle;
                     },
                     onEachFeature: onEachFeature
                 }).addTo(map);
@@ -388,6 +682,7 @@
                     selectedLayer = null;
                 }
                 map.setView([20, 0], 2);
+                closeFloatingPanel(); // Fechar os cards ao resetar a visão
             });
 
             // ── RESPONSIVE ──────────────────────────────────────────
