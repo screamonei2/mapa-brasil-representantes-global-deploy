@@ -267,7 +267,7 @@
 
             const fallbackGlobal = [{
                 NomeRepresentante: "SCHIOPPA CASTERS & WHEELS",
-                Contato: "Global Sales",
+                Contato: "NA-EMEA-APAC",
                 Telefones: ["+55 11 2065-5200"],
                 email: "global.sales@schioppa.com.br"
             }];
@@ -587,18 +587,7 @@
             }
 
             function onEachFeature(feature, layer) {
-                const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
                 const countryName = getCountryName(feature);
-                
-                // Verifica se tem dados específicos ou se cai na regra genérica habilitada
-                const hasSpecificData = !!representantesGlobais[nameEn] || nameEn === "Brazil";
-                const isLatam = isLatamCountry(feature);
-                
-                // Países que não são do Brasil, não têm rep específico, E NÃO são da LATAM, ficam disabled (cinza e sem clique)
-                if (!hasSpecificData && !isLatam) {
-                    layer.options.interactive = false; // Leaflet ignora todos os eventos de mouse
-                    return; 
-                }
                 
                 // Tooltip para países válidos
                 layer.bindTooltip(`
@@ -711,12 +700,7 @@
 
                 geoJsonLayer = L.geoJson(geoData, {
                     style: function (feature) {
-                        const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
-                        const hasSpecificData = !!representantesGlobais[nameEn] || nameEn === "Brazil";
-                        const isLatam = isLatamCountry(feature);
-                        
-                        // Habilita (Default Blue) se tiver dados ou se for fallback LATAM
-                        return (hasSpecificData || isLatam) ? defaultStyle : disabledStyle;
+                        return defaultStyle;
                     },
                     onEachFeature: onEachFeature
                 }).addTo(map);
