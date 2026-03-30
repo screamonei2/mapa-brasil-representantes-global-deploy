@@ -778,6 +778,8 @@
                 return ptFallback[nameEn] || nameEn;
             }
 
+            let tooltipTimeout;
+
             function onEachFeature(feature, layer) {
                 const countryName = getCountryName(feature);
 
@@ -788,21 +790,41 @@
                 `, {
                     sticky: true,
                     className: 'custom-tooltip',
-                    direction: 'auto'
+                    direction: 'auto',
+                    permanent: false,
+                    opacity: 0 // Começa transparente e o abrimos manualmente com delay
                 });
 
                 layer.on({
                     mouseover: function (e) {
                         const layer = e.target;
                         layer.setStyle(highlightStyle);
+
+                        // Cancela qualquer timer anterior (importante para movimento rápido)
+                        clearTimeout(tooltipTimeout);
+
+                        // Só abre o tooltip após meio segundo parado sobre o país
+                        tooltipTimeout = setTimeout(() => {
+                            layer.getTooltip().setOpacity(1); 
+                            layer.openTooltip();
+                        }, 500);
+
                         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
                             layer.bringToFront();
                         }
                     },
                     mouseout: function (e) {
                         const layer = e.target;
+                        
+                        // Cancela o timer se o usuário sair do país antes dos 500ms
+                        clearTimeout(tooltipTimeout);
+                        
+                        // Garante que o tooltip seja fechado
+                        layer.closeTooltip();
+                        layer.getTooltip().setOpacity(0);
+
                         if (layer !== selectedLayer) {
-                            geoJsonLayer.resetStyle(layer); // Leaflet automaticamente aplica o return da style fn
+                            geoJsonLayer.resetStyle(layer);
                         } else {
                             layer.setStyle(selectedStyle);
                         }
