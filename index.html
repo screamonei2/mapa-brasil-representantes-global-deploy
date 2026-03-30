@@ -739,6 +739,7 @@
                 center: [20, 0],
                 zoom: 2,
                 minZoom: 2,
+                zoomControl: false,
                 attributionControl: false,
                 maxBounds: [
                     [-90, -180],
@@ -746,6 +747,8 @@
                 ],
                 maxBoundsViscosity: 1.0
             });
+
+            L.control.zoom({ position: 'bottomleft' }).addTo(map);
 
             // O mapa original não usa tiles (deixa o fundo puramente branco com CSS background)
             // L.tileLayer removido para igualar o Vercel Deploy.
