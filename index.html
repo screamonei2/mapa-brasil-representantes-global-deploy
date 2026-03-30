@@ -202,6 +202,163 @@
         .country-tooltip::before {
             border-top-color: rgba(0, 0, 0, 0.8) !important;
         }
+
+        /* ── SEARCH BAR FLOATING UI ────────────────────────── */
+        .search-container {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 280px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        @media (min-width: 640px) {
+            .search-container {
+                width: 350px;
+            }
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+
+        .search-input-wrapper:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 25px rgba(59, 130, 246, 0.2);
+            width: 100%;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 12px 40px 12px 44px;
+            border: none;
+            outline: none;
+            font-size: 0.95rem;
+            color: #1f2937;
+        }
+
+        #search-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        #clear-search-btn {
+            position: absolute;
+            right: 12px;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        #clear-search-btn:hover {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        /* Dropdown de Sugestões */
+        #suggestions-container {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border: 1px solid #f3f4f6;
+            max-height: 380px;
+            overflow-y: auto;
+            z-index: 1001;
+            padding: 6px;
+        }
+
+        .suggestion-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .suggestion-item:hover {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+
+        .suggestion-item.active {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+        }
+
+        .suggestion-icon {
+            width: 32px;
+            height: 32px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #3b82f6;
+            flex-shrink: 0;
+        }
+
+        .suggestion-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .suggestion-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .suggestion-subtext {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .suggestion-type-tag {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .tag-country { background: #dcfce7; color: #166534; }
+        .tag-rep { background: #e0e7ff; color: #3730a3; }
+        .tag-fallback { background: #fef3c7; color: #92400e; }
+
+        /* Custom Scrollbar para Sugestões */
+        #suggestions-container::-webkit-scrollbar { width: 5px; }
+        #suggestions-container::-webkit-scrollbar-track { background: transparent; }
+        #suggestions-container::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        #suggestions-container::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+
     </style>
 </head>
 
@@ -218,6 +375,20 @@
                 <!-- Coluna do Mapa -->
                 <div class="map-container">
                     <div class="map-wrapper relative overflow-hidden">
+                        <!-- ── SEARCH BAR ────────────────────────── -->
+                        <div class="search-container">
+                            <div class="search-input-wrapper">
+                                <i data-lucide="search" class="search-icon w-5 h-5"></i>
+                                <input type="text" id="search-input" placeholder="País ou representante..." autocomplete="off">
+                                <button id="clear-search-btn" class="hidden">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <div id="suggestions-container" class="hidden">
+                                <!-- Sugestões injetadas aqui -->
+                            </div>
+                        </div>
+
                         <div id="map"></div>
 
                         <!-- ── FLOATING CARDS PANEL ────────────────────────── -->
@@ -463,6 +634,16 @@
             const panelTitle = document.getElementById('panel-title');
             const panelContent = document.getElementById('panel-content');
 
+            // ── SEARCH UI ELEMENTS ─────────────────────────────────────
+            const searchInput = document.getElementById('search-input');
+            const clearSearchBtn = document.getElementById('clear-search-btn');
+            const suggestionsContainer = document.getElementById('suggestions-container');
+
+            function normalize(str) {
+                if (!str) return '';
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            }
+
             function closeFloatingPanel() {
                 floatingPanel.classList.add('hidden');
                 floatingPanel.classList.remove('flex');
@@ -558,6 +739,7 @@
                 center: [20, 0],
                 zoom: 2,
                 minZoom: 2,
+                attributionControl: false,
                 maxBounds: [
                     [-90, -180],
                     [90, 180]
@@ -656,6 +838,8 @@
             }
 
             // ── LOAD DATA ───────────────────────────────────────────
+            let allFeatures = [];
+
             try {
                 const response = await fetch(GEOJSON_URL);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -705,6 +889,8 @@
                 }
                 // ----------------------------------
 
+                allFeatures = geoData.features;
+
                 geoJsonLayer = L.geoJson(geoData, {
                     style: function (feature) {
                         return defaultStyle;
@@ -735,6 +921,176 @@
             // ── RESPONSIVE ──────────────────────────────────────────
             window.addEventListener('resize', function () {
                 map.invalidateSize();
+            });
+
+            // ── SEARCH LOGIC ─────────────────────────────────────────
+            let selectedSuggestionIndex = -1;
+            let currentSuggestions = [];
+
+            function generateSuggestions(query) {
+                const normQuery = normalize(query);
+                const results = [];
+                const addedCountries = new Set();
+
+                // 1. Buscar em representantes específicos
+                for (const [country, reps] of Object.entries(representantesGlobais)) {
+                    if (normalize(country).includes(normQuery)) {
+                        results.push({
+                            name: country,
+                            type: 'País',
+                            tag: 'tag-country',
+                            icon: 'map-pin',
+                            feature: allFeatures.find(f => (f.properties.NAME_EN || f.properties.NAME) === country)
+                        });
+                        addedCountries.add(country);
+                    }
+
+                    reps.forEach(rep => {
+                        if (normalize(rep.NomeRepresentante).includes(normQuery) || 
+                            (rep.Contato && normalize(rep.Contato).includes(normQuery))) {
+                            results.push({
+                                name: rep.NomeRepresentante,
+                                subtext: country,
+                                type: 'Representante',
+                                tag: 'tag-rep',
+                                icon: 'user',
+                                feature: allFeatures.find(f => (f.properties.NAME_EN || f.properties.NAME) === country)
+                            });
+                        }
+                    });
+                }
+
+                // 2. Buscar em outros países (GeoJSON) que não foram adicionados ainda (Fallbacks + Brasil)
+                allFeatures.forEach(feature => {
+                    const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
+                    const countryName = getCountryName(feature);
+                    const normCountry = normalize(countryName);
+                    const normEn = normalize(nameEn);
+
+                    if (!addedCountries.has(nameEn) && (normCountry.includes(normQuery) || normEn.includes(normQuery))) {
+                        // Caso especial: BRASIL
+                        if (nameEn === "Brazil") {
+                            results.push({
+                                name: "Brasil",
+                                type: 'Nossa Sede',
+                                tag: 'tag-country',
+                                icon: 'map',
+                                feature: feature
+                            });
+                        } else {
+                            const isLatam = isLatamCountry(feature);
+                            results.push({
+                                name: countryName,
+                                type: isLatam ? 'Equipo LATAM' : 'Equipo Global',
+                                tag: 'tag-fallback',
+                                icon: 'globe',
+                                feature: feature
+                            });
+                        }
+                        addedCountries.add(nameEn);
+                    }
+                });
+
+                return results.slice(0, 8); // Limitar a 8 sugestões
+            }
+
+            function renderSuggestions(suggestions) {
+                currentSuggestions = suggestions;
+                if (suggestions.length === 0) {
+                    suggestionsContainer.classList.add('hidden');
+                    return;
+                }
+
+                suggestionsContainer.innerHTML = suggestions.map((s, idx) => `
+                    <div class="suggestion-item ${idx === selectedSuggestionIndex ? 'active' : ''}" data-index="${idx}">
+                        <div class="suggestion-icon">
+                            <i data-lucide="${s.icon}" class="w-4 h-4"></i>
+                        </div>
+                        <div class="suggestion-info">
+                            <div class="suggestion-name">${s.name}</div>
+                            ${s.subtext ? `<div class="suggestion-subtext">${s.subtext}</div>` : ''}
+                        </div>
+                        <span class="suggestion-type-tag ${s.tag}">${s.type}</span>
+                    </div>
+                `).join('');
+
+                lucide.createIcons();
+                suggestionsContainer.classList.remove('hidden');
+            }
+
+            function handleSelectSuggestion(suggestion) {
+                if (!suggestion || !suggestion.feature) return;
+
+                const feature = suggestion.feature;
+                const layer = geoJsonLayer.getLayers().find(l => l.feature === feature);
+
+                if (layer) {
+                    // Simular clique no layer para disparar toda a lógica existente
+                    layer.fire('click');
+                    
+                    // Limpar busca
+                    searchInput.value = '';
+                    clearSearchBtn.classList.add('hidden');
+                    suggestionsContainer.classList.add('hidden');
+                    searchInput.blur();
+                }
+            }
+
+            searchInput.addEventListener('input', function() {
+                const val = this.value;
+                if (val.length >= 2) {
+                    selectedSuggestionIndex = -1;
+                    const suggestions = generateSuggestions(val);
+                    renderSuggestions(suggestions);
+                    clearSearchBtn.classList.remove('hidden');
+                } else {
+                    suggestionsContainer.classList.add('hidden');
+                    clearSearchBtn.classList.add('hidden');
+                }
+            });
+
+            searchInput.addEventListener('keydown', function(e) {
+                const items = suggestionsContainer.querySelectorAll('.suggestion-item');
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, currentSuggestions.length - 1);
+                    renderSuggestions(currentSuggestions);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, 0);
+                    renderSuggestions(currentSuggestions);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedSuggestionIndex >= 0) {
+                        handleSelectSuggestion(currentSuggestions[selectedSuggestionIndex]);
+                    } else if (currentSuggestions.length > 0) {
+                        handleSelectSuggestion(currentSuggestions[0]);
+                    }
+                } else if (e.key === 'Escape') {
+                    suggestionsContainer.classList.add('hidden');
+                }
+            });
+
+            clearSearchBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                this.classList.add('hidden');
+                suggestionsContainer.classList.add('hidden');
+                searchInput.focus();
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
+                    suggestionsContainer.classList.add('hidden');
+                }
+            });
+
+            suggestionsContainer.addEventListener('click', function(e) {
+                const item = e.target.closest('.suggestion-item');
+                if (item) {
+                    const idx = parseInt(item.dataset.index);
+                    handleSelectSuggestion(currentSuggestions[idx]);
+                }
             });
         });
     </script>
