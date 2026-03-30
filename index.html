@@ -349,16 +349,38 @@
             letter-spacing: 0.025em;
         }
 
-        .tag-country { background: #dcfce7; color: #166534; }
-        .tag-rep { background: #e0e7ff; color: #3730a3; }
-        .tag-fallback { background: #fef3c7; color: #92400e; }
+        .tag-country {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .tag-rep {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .tag-fallback {
+            background: #fef3c7;
+            color: #92400e;
+        }
 
         /* Custom Scrollbar para Sugestões */
-        #suggestions-container::-webkit-scrollbar { width: 5px; }
-        #suggestions-container::-webkit-scrollbar-track { background: transparent; }
-        #suggestions-container::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        #suggestions-container::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        #suggestions-container::-webkit-scrollbar {
+            width: 5px;
+        }
 
+        #suggestions-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #suggestions-container::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        #suggestions-container::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
     </style>
 </head>
 
@@ -379,7 +401,8 @@
                         <div class="search-container">
                             <div class="search-input-wrapper">
                                 <i data-lucide="search" class="search-icon w-5 h-5"></i>
-                                <input type="text" id="search-input" placeholder="País ou representante..." autocomplete="off">
+                                <input type="text" id="search-input" placeholder="País ou representante..."
+                                    autocomplete="off">
                                 <button id="clear-search-btn" class="hidden">
                                     <i data-lucide="x" class="w-4 h-4"></i>
                                 </button>
@@ -805,7 +828,7 @@
 
                         // Só abre o tooltip após meio segundo parado sobre o país
                         tooltipTimeout = setTimeout(() => {
-                            layer.getTooltip().setOpacity(1); 
+                            layer.getTooltip().setOpacity(1);
                             layer.openTooltip();
                         }, 500);
 
@@ -815,10 +838,10 @@
                     },
                     mouseout: function (e) {
                         const layer = e.target;
-                        
+
                         // Cancela o timer se o usuário sair do país antes dos 500ms
                         clearTimeout(tooltipTimeout);
-                        
+
                         // Garante que o tooltip seja fechado
                         layer.closeTooltip();
                         layer.getTooltip().setOpacity(0);
@@ -971,7 +994,7 @@
                     }
 
                     reps.forEach(rep => {
-                        if (normalize(rep.NomeRepresentante).includes(normQuery) || 
+                        if (normalize(rep.NomeRepresentante).includes(normQuery) ||
                             (rep.Contato && normalize(rep.Contato).includes(normQuery))) {
                             results.push({
                                 name: rep.NomeRepresentante,
@@ -1006,7 +1029,7 @@
                             const isLatam = isLatamCountry(feature);
                             results.push({
                                 name: countryName,
-                                type: isLatam ? 'Equipo LATAM' : 'Equipo Global',
+                                type: isLatam ? 'Equipo LATAM' : 'NA-EMEA-APAC Team',
                                 tag: 'tag-fallback',
                                 icon: 'globe',
                                 feature: feature
@@ -1052,7 +1075,7 @@
                 if (layer) {
                     // Simular clique no layer para disparar toda a lógica existente
                     layer.fire('click');
-                    
+
                     // Limpar busca
                     searchInput.value = '';
                     clearSearchBtn.classList.add('hidden');
@@ -1061,7 +1084,7 @@
                 }
             }
 
-            searchInput.addEventListener('input', function() {
+            searchInput.addEventListener('input', function () {
                 const val = this.value;
                 if (val.length >= 2) {
                     selectedSuggestionIndex = -1;
@@ -1074,9 +1097,9 @@
                 }
             });
 
-            searchInput.addEventListener('keydown', function(e) {
+            searchInput.addEventListener('keydown', function (e) {
                 const items = suggestionsContainer.querySelectorAll('.suggestion-item');
-                
+
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, currentSuggestions.length - 1);
@@ -1097,20 +1120,20 @@
                 }
             });
 
-            clearSearchBtn.addEventListener('click', function() {
+            clearSearchBtn.addEventListener('click', function () {
                 searchInput.value = '';
                 this.classList.add('hidden');
                 suggestionsContainer.classList.add('hidden');
                 searchInput.focus();
             });
 
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (!searchInput.contains(e.target) && !suggestionsContainer.contains(e.target)) {
                     suggestionsContainer.classList.add('hidden');
                 }
             });
 
-            suggestionsContainer.addEventListener('click', function(e) {
+            suggestionsContainer.addEventListener('click', function (e) {
                 const item = e.target.closest('.suggestion-item');
                 if (item) {
                     const idx = parseInt(item.dataset.index);
