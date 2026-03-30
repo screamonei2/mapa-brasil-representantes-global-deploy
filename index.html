@@ -124,7 +124,8 @@
         /* Botão de Reset Zoom */
         .reset-zoom-btn {
             position: absolute;
-            bottom: 15px; /* Ajuste para não conflitar com a atribuição do mapa */
+            bottom: 15px;
+            /* Ajuste para não conflitar com a atribuição do mapa */
             right: 15px;
             z-index: 1000;
             background: white;
@@ -173,7 +174,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .loading-text {
@@ -195,7 +198,7 @@
             font-family: 'Inter', sans-serif;
             box-shadow: none;
         }
-        
+
         .country-tooltip::before {
             border-top-color: rgba(0, 0, 0, 0.8) !important;
         }
@@ -206,7 +209,8 @@
 
     <div id="representantes-container" class="container mx-auto p-2 sm:p-4 lg:p-6 max-w-7xl">
         <div class="mb-4 lg:mb-6">
-            <h1 id="main-title" class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Representantes Globais</h1>
+            <h1 id="main-title" class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Representantes Globais
+            </h1>
         </div>
 
         <div class="main-content">
@@ -214,20 +218,23 @@
                 <!-- Coluna do Mapa -->
                 <div class="map-container">
                     <div class="map-wrapper relative overflow-hidden">
-                    <div id="map"></div>
-                    
-                    <!-- ── FLOATING CARDS PANEL ────────────────────────── -->
-                    <div id="floating-panel" class="absolute top-4 right-4 w-72 sm:w-80 max-h-[calc(100%-2rem)] overflow-y-auto hidden z-[1000] flex-col p-1 pointer-events-none custom-scrollbar">
-                        <div class="bg-white/95 backdrop-blur-md rounded-xl shadow-lg shadow-black/10 p-3 mb-3 flex justify-between items-center border border-gray-200 pointer-events-auto">
-                            <h2 id="panel-title" class="font-bold text-blue-900 text-lg ml-1">País</h2>
-                            <button id="close-panel-btn" class="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
-                                <i data-lucide="x" class="w-4 h-4"></i>
-                            </button>
+                        <div id="map"></div>
+
+                        <!-- ── FLOATING CARDS PANEL ────────────────────────── -->
+                        <div id="floating-panel"
+                            class="absolute top-4 right-4 w-72 sm:w-80 max-h-[calc(100%-2rem)] overflow-y-auto hidden z-[1000] flex-col p-1 pointer-events-none custom-scrollbar">
+                            <div
+                                class="bg-white/95 backdrop-blur-md rounded-xl shadow-lg shadow-black/10 p-3 mb-3 flex justify-between items-center border border-gray-200 pointer-events-auto">
+                                <h2 id="panel-title" class="font-bold text-blue-900 text-lg ml-1">País</h2>
+                                <button id="close-panel-btn"
+                                    class="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                            <div id="panel-content" class="flex flex-col gap-3 pointer-events-auto">
+                                <!-- Cards flutuantes injetados aqui -->
+                            </div>
                         </div>
-                        <div id="panel-content" class="flex flex-col gap-3 pointer-events-auto">
-                            <!-- Cards flutuantes injetados aqui -->
-                        </div>
-                    </div>
                         <button id="reset-zoom-btn" class="reset-zoom-btn" title="Resetar zoom">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor">
@@ -237,7 +244,7 @@
                                     d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
                             </svg>
                         </button>
-                        
+
                         <!-- Loading Overlay -->
                         <div id="loading-overlay" class="loading-overlay">
                             <div class="loading-spinner"></div>
@@ -267,7 +274,7 @@
 
             const fallbackGlobal = [{
                 NomeRepresentante: "SCHIOPPA CASTERS & WHEELS",
-                Contato: "NA-EMEA-APAC",
+                Contato: "Equipe Global",
                 Telefones: ["+55 11 2065-5200"],
                 email: "global.sales@schioppa.com.br"
             }];
@@ -430,22 +437,22 @@
             function isLatamCountry(feature) {
                 const subregion = feature.properties.SUBREGION;
                 const nameEn = feature.properties.NAME_EN || feature.properties.NAME || "";
-                
+
                 // Força a inclusão da Guiana Francesa que costuma ser classificada como França/Europa nos mapas
                 if (nameEn === "French Guiana" || nameEn === "Fr. Guiana" || nameEn === "Guyane") {
                     return true;
                 }
-                
+
                 return latamSubregions.includes(subregion);
             }
 
             function getRepresentativesForCountry(feature) {
                 const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
-                
+
                 if (representantesGlobais[nameEn]) {
                     return representantesGlobais[nameEn];
                 }
-                
+
                 // LATAM Fallback (Regiões da América Latina que costumam cair no fallback se não estiverem explícitos)
                 return isLatamCountry(feature) ? fallbackLATAM : fallbackGlobal;
             }
@@ -482,7 +489,7 @@
 
             function renderCards(countryName, reps) {
                 panelTitle.textContent = countryName;
-                
+
                 panelContent.innerHTML = reps.map((item, index) => {
                     let telefonesHtml = '';
                     if (item.Telefones && item.Telefones.length > 0) {
@@ -588,7 +595,7 @@
 
             function onEachFeature(feature, layer) {
                 const countryName = getCountryName(feature);
-                
+
                 // Tooltip para países válidos
                 layer.bindTooltip(`
                     <div class="font-semibold text-gray-800">${countryName}</div>
@@ -616,14 +623,14 @@
                         }
                     },
                     click: function (e) {
-                        try { map.closeTooltip(); } catch(err) {} 
+                        try { map.closeTooltip(); } catch (err) { }
 
                         if (selectedLayer) {
                             geoJsonLayer.resetStyle(selectedLayer);
                         }
                         selectedLayer = e.target;
                         selectedLayer.setStyle(selectedStyle);
-                        
+
                         if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
                             selectedLayer.bringToFront();
                         }
@@ -637,7 +644,7 @@
 
                         const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
                         const countryName = getCountryName(feature);
-                        
+
                         if (nameEn === "Brazil") {
                             renderBrazilCTA();
                         } else {
@@ -671,11 +678,11 @@
                         const lon = poly[0][0][0]; // Pega a longitude do primeiro ponto do polígono
                         return lon < -45 && lon > -60;
                     });
-                    
+
                     if (polyIndex !== -1) {
                         // Extrai o polígono da França
                         const gfPolygon = franceFeat.geometry.coordinates.splice(polyIndex, 1)[0];
-                        
+
                         // Cria a nova feature independente
                         geoData.features.push({
                             type: 'Feature',
@@ -692,7 +699,7 @@
                                 coordinates: gfPolygon
                             }
                         });
-                        
+
                         // O Leaflet re-avalia o type. Se a França ficar com 1 polígono, tecnicamente deve rodar, mas para segurança ignoramos se precisar.
                     }
                 }
