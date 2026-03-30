@@ -671,6 +671,44 @@
                     return name !== 'Antarctica';
                 });
 
+                // --- HACK PARA GUIANA FRANCESA ---
+                // Nos dados ne_110m_admin_0_countries, a Guiana Francesa vem colada com a França (mesmo MultiPolygon),
+                // o que a deixa cinza (Europa) em vez de azul (LATAM). Vamos separá-la em uma feature própria.
+                const frIndex = geoData.features.findIndex(f => f.properties.NAME_EN === 'France' || f.properties.NAME === 'France');
+                if (frIndex !== -1 && geoData.features[frIndex].geometry.type === 'MultiPolygon') {
+                    const franceFeat = geoData.features[frIndex];
+                    // A Guiana Francesa está na América do Sul: aprox. lon -55 a -50 e lat 2 a 6
+                    const polyIndex = franceFeat.geometry.coordinates.findIndex(poly => {
+                        const lon = poly[0][0][0]; // Pega a longitude do primeiro ponto do polígono
+                        return lon < -45 && lon > -60;
+                    });
+                    
+                    if (polyIndex !== -1) {
+                        // Extrai o polígono da França
+                        const gfPolygon = franceFeat.geometry.coordinates.splice(polyIndex, 1)[0];
+                        
+                        // Cria a nova feature independente
+                        geoData.features.push({
+                            type: 'Feature',
+                            properties: {
+                                ...franceFeat.properties,
+                                NAME: 'French Guiana',
+                                NAME_EN: 'French Guiana',
+                                NAME_PT: 'Guiana Francesa',
+                                SUBREGION: 'South America',
+                                REGION_UN: 'Americas'
+                            },
+                            geometry: {
+                                type: 'Polygon',
+                                coordinates: gfPolygon
+                            }
+                        });
+                        
+                        // O Leaflet re-avalia o type. Se a França ficar com 1 polígono, tecnicamente deve rodar, mas para segurança ignoramos se precisar.
+                    }
+                }
+                // ----------------------------------
+
                 geoJsonLayer = L.geoJson(geoData, {
                     style: function (feature) {
                         const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
