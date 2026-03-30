@@ -424,17 +424,30 @@
                 ]
             };
 
+            // ── HELPERS / FUNÇÕES DE DADOS ────────────────────────────
+            const latamSubregions = ["South America", "Central America", "Caribbean", "Middle America"];
+
+            function isLatamCountry(feature) {
+                const subregion = feature.properties.SUBREGION;
+                const nameEn = feature.properties.NAME_EN || feature.properties.NAME || "";
+                
+                // Força a inclusão da Guiana Francesa que costuma ser classificada como França/Europa nos mapas
+                if (nameEn === "French Guiana" || nameEn === "Fr. Guiana" || nameEn === "Guyane") {
+                    return true;
+                }
+                
+                return latamSubregions.includes(subregion);
+            }
+
             function getRepresentativesForCountry(feature) {
                 const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
-                const subregion = feature.properties.SUBREGION;
                 
                 if (representantesGlobais[nameEn]) {
                     return representantesGlobais[nameEn];
                 }
                 
                 // LATAM Fallback (Regiões da América Latina que costumam cair no fallback se não estiverem explícitos)
-                const latamRegions = ["South America", "Central America", "Caribbean", "Middle America"];
-                return latamRegions.includes(subregion) ? fallbackLATAM : fallbackGlobal;
+                return isLatamCountry(feature) ? fallbackLATAM : fallbackGlobal;
             }
 
             // ── UI LOGIC / PAINEL FLUTUANTE ───────────────────────────
@@ -577,10 +590,12 @@
                 const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
                 const countryName = getCountryName(feature);
                 
+                // Verifica se tem dados específicos ou se cai na regra genérica habilitada
                 const hasSpecificData = !!representantesGlobais[nameEn] || nameEn === "Brazil";
+                const isLatam = isLatamCountry(feature);
                 
-                // Países disabled não podem ter cliques, hoverings, nem tooltips
-                if (!hasSpecificData) {
+                // Países que não são do Brasil, não têm rep específico, E NÃO são da LATAM, ficam disabled (cinza e sem clique)
+                if (!hasSpecificData && !isLatam) {
                     layer.options.interactive = false; // Leaflet ignora todos os eventos de mouse
                     return; 
                 }
@@ -660,7 +675,10 @@
                     style: function (feature) {
                         const nameEn = feature.properties.NAME_EN || feature.properties.NAME;
                         const hasSpecificData = !!representantesGlobais[nameEn] || nameEn === "Brazil";
-                        return hasSpecificData ? defaultStyle : disabledStyle;
+                        const isLatam = isLatamCountry(feature);
+                        
+                        // Habilita (Default Blue) se tiver dados ou se for fallback LATAM
+                        return (hasSpecificData || isLatam) ? defaultStyle : disabledStyle;
                     },
                     onEachFeature: onEachFeature
                 }).addTo(map);
