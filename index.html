@@ -381,6 +381,9 @@
         #suggestions-container::-webkit-scrollbar-thumb:hover {
             background: #cbd5e1;
         }
+        #main-title {
+            display: none !important;
+        }
     </style>
 </head>
 
@@ -452,6 +455,95 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', async function () {
+            // ── LOCALIZATION / TRADUÇÕES ─────────────────────────────
+            const translations = {
+                pt: {
+                    mainTitle: "Representantes Globais",
+                    searchPlaceholder: "País ou representante...",
+                    loadingText: "Carregando mapa mundial...",
+                    resetZoom: "Resetar zoom",
+                    panelCountryDefault: "País",
+                    brazilTitle: "Brasil",
+                    brazilSede: "Nossa Sede Central",
+                    brazilDesc: "Acesse a nossa página principal para encontrar e pesquisar representantes e distribuidores locais exclusivos no Brasil.",
+                    brazilBtn: "Acessar Mapa do Brasil",
+                    clickDetails: "Clique para maiores detalhes",
+                    typeCountry: "País",
+                    typeRep: "Representante",
+                    typeSede: "Nossa Sede",
+                    teamLatam: "Equipo LATAM",
+                    teamGlobal: "NA-EMEA-APAC Team",
+                    distributor: "Distribuidor",
+                    representative: "Representante",
+                    repDist: "Representante e Distribuidor",
+                    exclDist: "Distribuidor Exclusivo"
+                },
+                en: {
+                    mainTitle: "Global Representatives",
+                    searchPlaceholder: "Country or representative...",
+                    loadingText: "Loading world map...",
+                    resetZoom: "Reset zoom",
+                    panelCountryDefault: "Country",
+                    brazilTitle: "Brazil",
+                    brazilSede: "Our Headquarters",
+                    brazilDesc: "Access our main page to find and search for exclusive local representatives and distributors in Brazil.",
+                    brazilBtn: "Access Brazil Map",
+                    clickDetails: "Click for more details",
+                    typeCountry: "Country",
+                    typeRep: "Representative",
+                    typeSede: "Our HQ",
+                    teamLatam: "LATAM Team",
+                    teamGlobal: "NA-EMEA-APAC Team",
+                    distributor: "Distributor",
+                    representative: "Representative",
+                    repDist: "Representative & Distributor",
+                    exclDist: "Exclusive Distributor"
+                },
+                es: {
+                    mainTitle: "Representantes Globales",
+                    searchPlaceholder: "País o representante...",
+                    loadingText: "Cargando mapa mundial...",
+                    resetZoom: "Restablecer zoom",
+                    panelCountryDefault: "País",
+                    brazilTitle: "Brasil",
+                    brazilSede: "Nuestra Sede Central",
+                    brazilDesc: "Acceda a nuestra página principal para encontrar y buscar representantes y distribuidores locales exclusivos en Brasil.",
+                    brazilBtn: "Acceder al Mapa de Brasil",
+                    clickDetails: "Haga clic para más detalles",
+                    typeCountry: "País",
+                    typeRep: "Representante",
+                    typeSede: "Nuestra Sede",
+                    teamLatam: "Equipo LATAM",
+                    teamGlobal: "NA-EMEA-APAC Team",
+                    distributor: "Distribuidor",
+                    representative: "Representante",
+                    repDist: "Representante y Distribuidor",
+                    exclDist: "Distribuidor Exclusivo"
+                }
+            };
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const lang = urlParams.get('lang') || 'pt';
+            const t = translations[lang] || translations.pt;
+
+            // Aplicar traduções iniciais na UI
+            document.getElementById('main-title').textContent = t.mainTitle;
+            document.getElementById('search-input').placeholder = t.searchPlaceholder;
+            document.querySelector('.loading-text').textContent = t.loadingText;
+            document.getElementById('reset-zoom-btn').title = t.resetZoom;
+            document.getElementById('panel-title').textContent = t.panelCountryDefault;
+
+            function translateTerm(term) {
+                if (!term) return '';
+                const termMap = {
+                    "Distribuidor": t.distributor,
+                    "Representante": t.representative,
+                    "Representante e Distribuidor": t.repDist,
+                    "Distribuidor Exclusivo": t.exclDist
+                };
+                return termMap[term] || termMap[term.trim()] || term;
+            }
+
             // Inicializar ícones imediatamente
             lucide.createIcons();
 
@@ -682,14 +774,14 @@
             closePanelBtn.addEventListener('click', closeFloatingPanel);
 
             function renderBrazilCTA() {
-                panelTitle.textContent = "Brasil";
+                panelTitle.textContent = t.brazilTitle;
                 panelContent.innerHTML = `
                     <div class="result-item bg-white border border-gray-100 rounded-xl p-6 shadow-md transition-shadow">
                         <div class="text-green-600 mb-4 flex justify-center"><i data-lucide="map" class="w-12 h-12"></i></div>
-                        <div class="font-bold text-gray-800 text-xl mb-3 text-center">Nossa Sede Central</div>
-                        <p class="text-sm text-gray-600 mb-6 text-center leading-relaxed">Acesse a nossa página principal para encontrar e pesquisar representantes e distribuidores locais exclusivos no Brasil.</p>
-                        <a href="../vercel-deploy/index.html" class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-sm">
-                            Acessar Mapa do Brasil
+                        <div class="font-bold text-gray-800 text-xl mb-3 text-center">${t.brazilSede}</div>
+                        <p class="text-sm text-gray-600 mb-6 text-center leading-relaxed">${t.brazilDesc}</p>
+                        <a href="https://www.schioppa.com.br/mapa/" target="_blank" class="block w-full text-center bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors shadow-sm">
+                            ${t.brazilBtn}
                         </a>
                     </div>
                 `;
@@ -714,7 +806,7 @@
                             <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                             <div class="font-bold text-blue-900 text-[1.05rem] mb-2.5 leading-tight">${item.NomeRepresentante}</div>
                             <div class="space-y-2.5">
-                                ${item.Tipo ? `<div class="text-gray-700 text-sm flex items-center gap-2.5"><i data-lucide="tag" class="w-4 h-4 text-blue-500/70"></i> <span class="font-medium">${item.Tipo}</span></div>` : ''}
+                                ${item.Tipo ? `<div class="text-gray-700 text-sm flex items-center gap-2.5"><i data-lucide="tag" class="w-4 h-4 text-blue-500/70"></i> <span class="font-medium">${translateTerm(item.Tipo)}</span></div>` : ''}
                                 ${item.Contato ? `<div class="text-gray-700 text-sm flex items-center gap-2.5"><i data-lucide="user" class="w-4 h-4 text-blue-500/70"></i> <span>${item.Contato}</span></div>` : ''}
                                 ${item.Endereco ? `<div class="text-gray-700 text-sm flex items-start gap-2.5"><i data-lucide="map-pin" class="w-4 h-4 text-blue-500/70 mt-0.5 shrink-0"></i> <span class="leading-snug">${item.Endereco}</span></div>` : ''}
                                 ${item.email ? `<div class="text-gray-700 text-sm flex items-center gap-2.5"><i data-lucide="mail" class="w-4 h-4 text-blue-500/70"></i> <a href="mailto:${item.email}" class="text-blue-600 hover:underline break-all">${item.email}</a></div>` : ''}
@@ -798,10 +890,35 @@
                 "eSwatini": "Eswatini"
             };
 
+            const esFallback = {
+                "United States of America": "Estados Unidos",
+                "Russia": "Rusia",
+                "W. Sahara": "Sáhara Occidental",
+                "Dem. Rep. Congo": "R.D. Congo",
+                "Central African Rep.": "Rep. Centroafricana",
+                "S. Sudan": "Sudán del Sur",
+                "Dominican Rep.": "Rep. Dominicana",
+                "Falkland Is.": "Islas Malvinas",
+                "Greenland": "Groenlandia",
+                "Eq. Guinea": "Guinea Ecuatorial",
+                "Brazil": "Brasil"
+            };
+
             function getCountryName(feature) {
                 const props = feature.properties;
                 const nameEn = props.NAME_EN || props.NAME;
-                // Usar NAME_PT se disponível e não vazio ou fallback manual
+
+                if (lang === 'en') {
+                    // No modo inglês, o "Brazil" do GeoJSON geralmente já é "Brazil"
+                    return nameEn;
+                }
+
+                if (lang === 'es') {
+                    // Tenta o nome em espanhol do GeoJSON, depois o fallback manual
+                    return props.NAME_ES || esFallback[nameEn] || nameEn;
+                }
+
+                // Padrão Português
                 if (props.NAME_PT && props.NAME_PT.trim() !== '') {
                     return props.NAME_PT;
                 }
@@ -816,7 +933,7 @@
                 // Tooltip para países válidos
                 layer.bindTooltip(`
                     <div class="font-semibold text-gray-800">${countryName}</div>
-                    <div class="text-xs text-gray-500 mt-1">Clique para maiores detalhes</div>
+                    <div class="text-xs text-gray-500 mt-1">${t.clickDetails}</div>
                 `, {
                     sticky: true,
                     className: 'custom-tooltip',
@@ -992,7 +1109,7 @@
                     if (normalize(country).includes(normQuery)) {
                         results.push({
                             name: country,
-                            type: 'País',
+                            type: t.typeCountry,
                             tag: 'tag-country',
                             icon: 'map-pin',
                             feature: allFeatures.find(f => (f.properties.NAME_EN || f.properties.NAME) === country)
@@ -1006,7 +1123,7 @@
                             results.push({
                                 name: rep.NomeRepresentante,
                                 subtext: country,
-                                type: 'Representante',
+                                type: t.typeRep,
                                 tag: 'tag-rep',
                                 icon: 'user',
                                 feature: allFeatures.find(f => (f.properties.NAME_EN || f.properties.NAME) === country)
@@ -1026,8 +1143,8 @@
                         // Caso especial: BRASIL
                         if (nameEn === "Brazil") {
                             results.push({
-                                name: "Brasil",
-                                type: 'Nossa Sede',
+                                name: t.brazilTitle,
+                                type: t.typeSede,
                                 tag: 'tag-country',
                                 icon: 'map',
                                 feature: feature
@@ -1036,7 +1153,7 @@
                             const isLatam = isLatamCountry(feature);
                             results.push({
                                 name: countryName,
-                                type: isLatam ? 'Equipo LATAM' : 'NA-EMEA-APAC Team',
+                                type: isLatam ? t.teamLatam : t.teamGlobal,
                                 tag: 'tag-fallback',
                                 icon: 'globe',
                                 feature: feature
